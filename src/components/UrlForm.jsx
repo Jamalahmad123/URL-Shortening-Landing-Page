@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
+import { motion, AnimatePresence } from "framer-motion";
 import ShortUrlList from "./ShortUrlList";
 import Button from "../shared/Button";
 import { useEffect, useState } from "react";
@@ -7,6 +8,7 @@ import { shortLinks } from "../data/data";
 const UrlForm = () => {
   const [text, setText] = useState("");
   const [error, setError] = useState(false);
+  // const [loader, setLoader] = useState(false);
   const [linksData, setLinksData] = useState(shortLinks);
 
   function handleText(e) {
@@ -27,12 +29,14 @@ const UrlForm = () => {
     // check if text is empty
     if (text === "") {
       setError(true);
+    } else if (text !== "") {
+      setError(false);
     }
 
     fetch(`https://api.shrtco.de/v2/shorten?url=${text}`)
       .then((res) => res.json())
       .then((data) => {
-        return setLinksData([
+        setLinksData([
           {
             id: uuidv4(),
             actualLink: data.result.original_link,
@@ -64,7 +68,7 @@ const UrlForm = () => {
               className={`w-full rounded-lg p-3 focus:outline-none ${
                 error
                   ? "outline outline-1 outline-red-500 placeholder:text-red-500"
-                  : " placeholder:text-Gray outline-none"
+                  : "placeholder:text-Gray outline-none"
               }`}
               value={text}
               onChange={handleText}
@@ -75,13 +79,22 @@ const UrlForm = () => {
           </div>
         </form>
         <div className="py-8 space-y-4">
-          {linksData.map((linksObj) => (
-            <ShortUrlList
-              linksData={linksObj}
-              key={linksObj.id}
-              handleDelete={deleteGeneratedLink}
-            />
-          ))}
+          <AnimatePresence>
+            {linksData.map((linksObj) => (
+              <motion.div
+                key={linksObj.id}
+                initial={{ x: -30 }}
+                animate={{ x: 0 }}
+                exit={{ x: 60, opacity: 0 }}
+              >
+                <ShortUrlList
+                  key={linksObj.id}
+                  linksData={linksObj}
+                  handleDelete={deleteGeneratedLink}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       </div>
     </section>
